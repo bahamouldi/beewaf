@@ -34,6 +34,7 @@ CMDI_PATTERNS = [
     r"`.*`",  # Backticks: `whoami`
     r"\$\(.*\)",  # Command substitution: $(whoami)
     r"%0a|%0d",  # Newline injection
+    r"\|\s*(grep|awk|sed|sort|uniq|head|tail|cut)",  # Pipe with Unix commands
 ]
 
 # ==================== PATH TRAVERSAL / LFI PATTERNS ====================
@@ -62,6 +63,103 @@ XXE_PATTERNS = [
     r"SYSTEM\s+[\"']file://",  # External entity: file://
 ]
 
+# ==================== LDAP INJECTION PATTERNS ====================
+LDAP_PATTERNS = [
+    r"\(\|\(",  # (|( LDAP OR injection
+    r"\)\(\|",  # )(| LDAP injection
+    r"\*\)\(",  # *)( LDAP wildcard injection
+    r"\(&\(",  # (&( LDAP AND injection
+]
+
+# ==================== NOSQL INJECTION PATTERNS ====================
+NOSQL_PATTERNS = [
+    r"\{\s*\$\w+\s*:",  # {$ne:, {$gt:, etc.
+    r"\[\s*\$\w+\s*\]",  # [$ne], [$regex], etc.
+    r"\{\s*['\"]?\$where['\"]?\s*:",  # $where queries
+    r"sleep\s*\(\s*\d+\s*\)",  # sleep(5000)
+]
+
+# ==================== LOG4SHELL/JNDI INJECTION PATTERNS ====================
+JNDI_PATTERNS = [
+    r"\$\{jndi:",  # ${jndi:ldap://
+    r"\$\{jndi:ldap://",
+    r"\$\{jndi:rmi://",
+    r"\$\{jndi:dns://",
+]
+
+# ==================== PHP FILTER/WRAPPER PATTERNS ====================
+PHP_FILTER_PATTERNS = [
+    r"php://filter",
+    r"php://input",
+    r"php://output",
+    r"data://text/plain",
+    r"expect://",
+    r"phar://",
+]
+
+# ==================== SERVER-SIDE TEMPLATE INJECTION (SSTI) PATTERNS ====================
+SSTI_PATTERNS = [
+    r"\{\{.*\*.*\}\}",  # {{7*7}}
+    r"\$\{.*\*.*\}",  # ${7*7}
+    r"\{\%.*\%\}",  # {%...%}
+    r"<\%.*\%>",  # <%...%>
+    r"\{\{.*config.*\}\}",  # {{config}}
+    r"\{\{.*self.*\}\}",  # {{self}}
+]
+
+# ==================== JSP CODE INJECTION PATTERNS ====================
+JSP_PATTERNS = [
+    r"<\%\s*eval\s*\(",  # <% eval(
+    r"<\%=.*request\.getParameter",  # <%= request.getParameter
+    r"<jsp:include",
+    r"<jsp:forward",
+]
+
+# ==================== ADVANCED LFI PATTERNS ====================
+ADVANCED_LFI_PATTERNS = [
+    r"/proc/self/",
+    r"/proc/\d+/",
+    r"/var/log/",
+    r"/var/mail/",
+    r"\.\./\.\./proc/",
+]
+
+# ==================== PYTHON CODE INJECTION PATTERNS ====================
+PYTHON_INJECTION_PATTERNS = [
+    r"__import__\s*\(",  # __import__('os')
+    r"\bexec\s*\(",  # exec(code)
+    r"\beval\s*\(",  # eval(code)
+    r"\bcompile\s*\(",  # compile(code)
+    r"os\.system",  # os.system('cmd')
+    r"subprocess\.",  # subprocess.call, subprocess.Popen
+    r"commands\.",  # commands.getoutput
+]
+
+# ==================== JAVA/JAR PROTOCOL PATTERNS ====================
+JAR_PROTOCOL_PATTERNS = [
+    r"jar:http://",  # JAR URL remote class loading
+    r"jar:https://",
+    r"jar:ftp://",
+    r"jar:file://",
+]
+
+# ==================== GRAPHQL INJECTION PATTERNS ====================
+GRAPHQL_PATTERNS = [
+    r"__schema\s*\{",  # GraphQL introspection
+    r"__type\s*\(",  # Type introspection
+    r"__typename",  # Type name introspection
+    r"query\s+IntrospectionQuery",  # Full introspection
+]
+
+# ==================== DESERIALIZATION PATTERNS ====================
+DESERIALIZATION_PATTERNS = [
+    r"!!python/object",  # YAML Python object deserialization
+    r"O:\d+:",  # PHP serialized object: O:8:"stdClass"
+    r"a:\d+:",  # PHP serialized array: a:2:{...}
+    r"rO0AB",  # Java serialized (base64 encoded)
+    r"\xac\xed\x00\x05",  # Java serialization magic bytes
+]
+
 # ==================== BRUTE FORCE PATTERNS ====================
 BRUTE_PATTERNS = [
     r"(login|password).*(\d{6,})",
@@ -81,6 +179,28 @@ for p in SSRF_PATTERNS:
     _default_compiled.append((re.compile(p, re.IGNORECASE), 'ssrf'))
 for p in XXE_PATTERNS:
     _default_compiled.append((re.compile(p, re.IGNORECASE), 'xxe'))
+for p in LDAP_PATTERNS:
+    _default_compiled.append((re.compile(p, re.IGNORECASE), 'ldap'))
+for p in NOSQL_PATTERNS:
+    _default_compiled.append((re.compile(p, re.IGNORECASE), 'nosql'))
+for p in JNDI_PATTERNS:
+    _default_compiled.append((re.compile(p, re.IGNORECASE), 'jndi'))
+for p in PHP_FILTER_PATTERNS:
+    _default_compiled.append((re.compile(p, re.IGNORECASE), 'php-filter'))
+for p in SSTI_PATTERNS:
+    _default_compiled.append((re.compile(p, re.IGNORECASE), 'ssti'))
+for p in JSP_PATTERNS:
+    _default_compiled.append((re.compile(p, re.IGNORECASE), 'jsp'))
+for p in ADVANCED_LFI_PATTERNS:
+    _default_compiled.append((re.compile(p, re.IGNORECASE), 'lfi'))
+for p in PYTHON_INJECTION_PATTERNS:
+    _default_compiled.append((re.compile(p, re.IGNORECASE), 'python-injection'))
+for p in JAR_PROTOCOL_PATTERNS:
+    _default_compiled.append((re.compile(p, re.IGNORECASE), 'jar-protocol'))
+for p in GRAPHQL_PATTERNS:
+    _default_compiled.append((re.compile(p, re.IGNORECASE), 'graphql'))
+for p in DESERIALIZATION_PATTERNS:
+    _default_compiled.append((re.compile(p, re.IGNORECASE), 'deserialization'))
 for p in BRUTE_PATTERNS:
     _default_compiled.append((re.compile(p, re.IGNORECASE), 'brute'))
 
@@ -119,12 +239,21 @@ def check_regex_rules(path: str, body: str, headers: Dict[str, str]) -> Tuple[bo
     Checks request path+body+headers against compiled regex rules.
     Respects `ALLOW_PATHS`.
     """
+    import urllib.parse
+    
     if path in ALLOW_PATHS:
         return False, None
 
+    # Decode URL encoding to detect obfuscated attacks
+    decoded_path = urllib.parse.unquote(path or '') if path else ''
+    decoded_body = urllib.parse.unquote(body or '') if body else ''
+    
+    # Check both original and decoded versions
     target = ' '.join([path or '', body or '', _headers_to_text(headers or {})])
+    decoded_target = ' '.join([decoded_path, decoded_body, _headers_to_text(headers or {})])
+    
     for pat, kind in COMPILED_RULES:
-        if pat.search(target):
+        if pat.search(target) or pat.search(decoded_target):
             return True, f"regex-{kind}"
     return False, None
 
