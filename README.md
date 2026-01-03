@@ -1,13 +1,36 @@
-# BeeWAF
-Minimal WAF prototype implemented with FastAPI.
+# BeeWAF — WAF Personnalisé
 
-Quick start (local):
+**Projet:** Conception, Développement et Déploiement d'un Web Application Firewall (WAF) Personnalisé  
+**Référence:** Sujet N° 2  
+**Technologies:** Python, FastAPI, Regex, scikit-learn (IsolationForest), ClamAV, Jenkins, Kubernetes
 
+## Conformité au Cahier des Charges
+
+| Exigence | Statut | Implémentation |
+|----------|--------|----------------|
+| **WAF personnalisé en Python** | ✅ | `app/main.py`, `waf/*` |
+| **Framework FastAPI** | ✅ | Application complète avec middleware WAF |
+| **Protection Injection SQL** | ✅ | Règles regex dans `waf/rules.py` |
+| **Protection XSS** | ✅ | Règles regex détectant scripts/payloads |
+| **Protection Force Brute** | ✅ | Rate limiter in-memory (`waf/ratelimit.py`) |
+| **Détection Anomalies** | ✅ | IsolationForest + fallback z-score (`waf/anomaly.py`) |
+| **Intégration ClamAV** | ✅ | Scanner antivirus (`waf/clamav_scanner.py`) |
+| **CI/CD Jenkins** | ✅ | Pipeline complet (`Jenkinsfile`) |
+| **Déploiement Kubernetes** | ✅ | Manifests + probes (`k8s/`) |
+| **Tests Automatisés** | ✅ | pytest + scripts d'intégration |
+
+## Quick Start (local)
+
+```bash
 pip3 install -r requirements.txt
 uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
 
 Run tests:
+```bash
 ./tests/test_waf.sh
+pytest -q
+```
 
 Kubernetes and Jenkins artifacts are in `k8s/` and `Jenkinsfile`.
 
